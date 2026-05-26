@@ -1,4 +1,5 @@
 require('dotenv').config();
+const fs = require('fs');
 const express = require('express');
 const http = require('http');
 const path = require('path');
@@ -54,15 +55,18 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
 });
 
-// Serve React build in production
-if (process.env.NODE_ENV === 'production') {
-  app.use(express.static(path.join(__dirname, '../client/dist')));
+// Serve React build if it exists
+const clientDistPath = path.join(__dirname, '../client/dist');
+const clientIndexPath = path.join(clientDistPath, 'index.html');
+
+if (fs.existsSync(clientIndexPath)) {
+  app.use(express.static(clientDistPath));
 
   app.get('*', (req, res, next) => {
     if (req.path.startsWith('/api')) {
       return next();
     }
-    res.sendFile(path.join(__dirname, '../client/dist/index.html'));
+    res.sendFile(clientIndexPath);
   });
 }
 
